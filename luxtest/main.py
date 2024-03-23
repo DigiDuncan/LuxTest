@@ -2,10 +2,10 @@ import importlib.resources as pkg_resources
 
 import arcade
 from arcade import Window
-from arcade import key
 
 import luxtest.data.fonts
 from luxtest.lib.dev_menu import DevMenu
+from luxtest.views.mainmenu import MenuView
 from luxtest.views.musicmixer import MusicMixerView
 
 FPS_CAP = 240
@@ -23,17 +23,7 @@ class LuxTest(Window):
             "Music Mixer": MusicMixerView
         })
 
-    def on_key_press(self, symbol: int, modifiers: int):
-        match symbol:
-            case key.UP:
-                self.menu.selected -= 1
-            case key.DOWN:
-                self.menu.selected += 1
-            case key.ENTER:
-                self.show_view(self.menu.current_view())
-
-    def on_draw(self):
-        self.menu.draw()
+        self.show_view(MenuView())
 
 
 def main():

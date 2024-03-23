@@ -2,7 +2,8 @@ import importlib.resources as pkg_resources
 import logging
 
 import arcade
-from arcade import View
+from arcade import Sprite, SpriteList, Texture, View
+from arcade.experimental.bloom_filter import BloomFilter
 from arcade.geometry import is_point_in_box
 from arcade.types import Color
 import pyglet.media as media
@@ -111,17 +112,6 @@ class RGBMusicMixer:
             return False
         return self.tracks[0].playing
 
-    @property
-    def volume(self) -> float:
-        if not self.tracks:
-            return 1.0
-        return self.tracks[0].volume
-
-    @volume.setter
-    def volume(self, v: float):
-        for t in self.tracks:
-            t.volume = v
-
     def seek(self, time):
         playing = self.playing
         if playing:
@@ -169,6 +159,13 @@ class MusicMixerView(View):
         self.green = (0, 0, 0, 0)
         self.blue = (0, 0, 0, 0)
 
+        self.tex = Texture.create_empty("rgbmusic", (1280, 720))
+        self.sprite = Sprite(self.tex, center_x = self.window.width // 2, center_y = self.window.height // 2)
+        self.sprite_list = SpriteList()
+        self.sprite_list.append(self.sprite)
+
+        self.bloom_filter = BloomFilter(1280, 720, 5.0)
+
         self.calc_pos()
 
     def on_resize(self, width: int, height: int):
@@ -206,8 +203,6 @@ class MusicMixerView(View):
         self.blue = (square_left, square_center_x, blue_bottom, blue_top)
 
     def on_draw(self):
-        self.clear()
-
         ww, wh = arcade.get_window().size
         wcw = ww / 2
 
@@ -221,21 +216,32 @@ class MusicMixerView(View):
         square_top = two_thirds_h
         square_bottom = one_third_h
 
-        # Outline
-        arcade.draw_lrbt_rectangle_outline(
-            square_left, square_right, square_bottom, square_top, arcade.color.GRAY, 5
-        )
+        with arcade.get_window().ctx.default_atlas.render_into(self.tex) as fbo:
+            fbo.clear()
 
-        if self.rgbmusic.red:
-            arcade.draw_lrbt_rectangle_filled(*self.red, arcade.color.RED)
-        if self.rgbmusic.green:
-            arcade.draw_lrbt_rectangle_filled(*self.green, arcade.color.GREEN)
-        if self.rgbmusic.blue:
-            arcade.draw_lrbt_rectangle_filled(*self.blue, arcade.color.BLUE)
+            # Outline
+            arcade.draw_lrbt_rectangle_outline(
+                square_left, square_right, square_bottom, square_top, arcade.color.GRAY, 5
+            )
 
-        # Color
-        arcade.draw_lrbt_rectangle_filled(
-            square_center_x, square_right, square_bottom, square_top, self.rgbmusic.color
-        )
+            if self.rgbmusic.red:
+                arcade.draw_lrbt_rectangle_filled(*self.red, arcade.color.RED)
+            if self.rgbmusic.green:
+                arcade.draw_lrbt_rectangle_filled(*self.green, arcade.color.GREEN)
+            if self.rgbmusic.blue:
+                arcade.draw_lrbt_rectangle_filled(*self.blue, arcade.color.BLUE)
 
+            # Color
+            arcade.draw_lrbt_rectangle_filled(
+                square_center_x, square_right, square_bottom, square_top, self.rgbmusic.color
+            )
+
+        self.bloom_filter.use()
+        self.bloom_filter.clear()
+        self.sprite_list.draw()
+
+        self.window.use()
+        self.clear()
+        self.bloom_filter.draw()
+        self.sprite_list.draw()
         return super().on_draw()

@@ -10,6 +10,7 @@ class DevMenu:
 
         self.batch = Batch()
         self.texts: list[Text] = []
+        self.instructions = Text("[UP/DOWN]: Scroll, [ENTER]: Select", 1275, 5, font_name = "GohuFont 11 Nerd Font Mono", font_size = 22, batch = self.batch, anchor_y = "bottom", anchor_x = "right")
 
         label_bottom = arcade.get_window().height - 5
         for k in self.views:
