@@ -238,7 +238,8 @@ class MusicMixerView(DigiView):
                 arcade.draw_lrbt_rectangle_filled(*self.blue, arcade.color.BLUE)
 
             # Color
-            arcade.draw_lrbt_rectangle_filled(*self.color_square, self.rgbmusic.color)
+            if self.rgbmusic.color != Color(0, 0, 0):
+                arcade.draw_lrbt_rectangle_filled(*self.color_square, self.rgbmusic.color)
 
         # BLOOM
         self.bloom_filter.use()
