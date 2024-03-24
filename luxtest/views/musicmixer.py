@@ -166,12 +166,15 @@ class MusicMixerView(DigiView):
         self.sprite_list = SpriteList()
         self.sprite_list.append(self.sprite)
 
+        self.bloom_level = 5.0
         self.bloom_filter = BloomFilter(1280, 720, 5.0)
 
         self.calc_pos()
 
     def on_show_view(self):
         self.rgbmusic.play()
+        self.bloom_level = 5.0
+        self.bloom_filter = BloomFilter(1280, 720, 5.0)
 
     def on_hide_view(self):
         self.rgbmusic.pause()
@@ -185,6 +188,15 @@ class MusicMixerView(DigiView):
                 self.rgbmusic.green = not self.rgbmusic.green
             elif is_point_in_box((self.blue[0], self.blue[2]), (x, y), (self.blue[1], self.blue[3])):
                 self.rgbmusic.blue = not self.rgbmusic.blue
+
+    def on_key_press(self, symbol: int, modifiers: int):
+        if symbol == arcade.key.UP:
+            self.bloom_level += 1.0
+            self.bloom_filter = BloomFilter(1280, 720, self.bloom_level)
+        elif symbol == arcade.key.DOWN:
+            self.bloom_level -= 1.0
+            self.bloom_filter = BloomFilter(1280, 720, self.bloom_level)
+        return super().on_key_press(symbol, modifiers)
 
     def calc_pos(self):
         ww, wh = arcade.get_window().size
