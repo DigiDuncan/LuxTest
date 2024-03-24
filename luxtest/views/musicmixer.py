@@ -158,6 +158,8 @@ class MusicMixerView(View):
         self.red = (0, 0, 0, 0)
         self.green = (0, 0, 0, 0)
         self.blue = (0, 0, 0, 0)
+        self.square = (0, 0, 0, 0)
+        self.color_square = (0, 0, 0, 0)
 
         self.tex = Texture.create_empty("rgbmusic", (1280, 720))
         self.sprite = Sprite(self.tex, center_x = self.window.width // 2, center_y = self.window.height // 2)
@@ -166,10 +168,6 @@ class MusicMixerView(View):
 
         self.bloom_filter = BloomFilter(1280, 720, 5.0)
 
-        self.calc_pos()
-
-    def on_resize(self, width: int, height: int):
-        super().on_resize(width, height)
         self.calc_pos()
 
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
@@ -198,11 +196,6 @@ class MusicMixerView(View):
         green_bottom = blue_top = green_top - one_ninth_h
         blue_bottom = blue_top - one_ninth_h
 
-        self.red = (square_left, square_center_x, red_bottom, red_top)
-        self.green = (square_left, square_center_x, green_bottom, green_top)
-        self.blue = (square_left, square_center_x, blue_bottom, blue_top)
-
-    def on_draw(self):
         ww, wh = arcade.get_window().size
         wcw = ww / 2
 
@@ -216,14 +209,20 @@ class MusicMixerView(View):
         square_top = two_thirds_h
         square_bottom = one_third_h
 
+        self.red = (square_left, square_center_x, red_bottom, red_top)
+        self.green = (square_left, square_center_x, green_bottom, green_top)
+        self.blue = (square_left, square_center_x, blue_bottom, blue_top)
+        self.square = (square_left, square_right, square_bottom, square_top)
+        self.color_square = (square_center_x, square_right, square_bottom, square_top)
+
+    def on_draw(self):
         with arcade.get_window().ctx.default_atlas.render_into(self.tex) as fbo:
             fbo.clear()
 
             # Outline
-            arcade.draw_lrbt_rectangle_outline(
-                square_left, square_right, square_bottom, square_top, arcade.color.GRAY, 5
-            )
+            arcade.draw_lrbt_rectangle_outline(*self.square, arcade.color.GRAY, 5)
 
+            # Lights
             if self.rgbmusic.red:
                 arcade.draw_lrbt_rectangle_filled(*self.red, arcade.color.RED)
             if self.rgbmusic.green:
@@ -232,10 +231,9 @@ class MusicMixerView(View):
                 arcade.draw_lrbt_rectangle_filled(*self.blue, arcade.color.BLUE)
 
             # Color
-            arcade.draw_lrbt_rectangle_filled(
-                square_center_x, square_right, square_bottom, square_top, self.rgbmusic.color
-            )
+            arcade.draw_lrbt_rectangle_filled(*self.color_square, self.rgbmusic.color)
 
+        # BLOOM
         self.bloom_filter.use()
         self.bloom_filter.clear()
         self.sprite_list.draw()
@@ -243,5 +241,6 @@ class MusicMixerView(View):
         self.window.use()
         self.clear()
         self.bloom_filter.draw()
+        # Draw the original on top of the bloom because it looks better
         self.sprite_list.draw()
         return super().on_draw()
