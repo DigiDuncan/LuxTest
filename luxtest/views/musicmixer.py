@@ -2,13 +2,14 @@ import importlib.resources as pkg_resources
 import logging
 
 import arcade
-from arcade import Sprite, SpriteList, Texture, View
+from arcade import Sprite, SpriteList, Texture
 from arcade.experimental.bloom_filter import BloomFilter
 from arcade.geometry import is_point_in_box
 from arcade.types import Color
 import pyglet.media as media
 
 import luxtest.data.music
+from luxtest.lib.digiview import DigiView
 
 logger = logging.getLogger("charm")
 
@@ -145,7 +146,7 @@ class RGBMusicMixer:
         self.seek(maxtime)
 
 
-class MusicMixerView(View):
+class MusicMixerView(DigiView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         sounds: list[arcade.Sound] = []
@@ -153,7 +154,6 @@ class MusicMixerView(View):
             with pkg_resources.path(luxtest.data.music, s) as p:
                 sounds.append(arcade.load_sound(p))
         self.rgbmusic = RGBMusicMixer(sounds)
-        self.rgbmusic.play()
 
         self.red = (0, 0, 0, 0)
         self.green = (0, 0, 0, 0)
@@ -169,6 +169,13 @@ class MusicMixerView(View):
         self.bloom_filter = BloomFilter(1280, 720, 5.0)
 
         self.calc_pos()
+
+    def on_show_view(self):
+        self.rgbmusic.play()
+
+    def on_hide_view(self):
+        self.rgbmusic.pause()
+        self.rgbmusic.seek(0)
 
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
         if button == arcade.MOUSE_BUTTON_LEFT:
